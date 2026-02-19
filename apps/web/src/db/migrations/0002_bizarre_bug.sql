@@ -1,0 +1,1 @@
+CREATE INDEX "record_values_record_id" ON "record_values" USING btree ("record_id");

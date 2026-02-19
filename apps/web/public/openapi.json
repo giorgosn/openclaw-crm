@@ -1,0 +1,1292 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenClaw CRM API",
+    "version": "1.0.0",
+    "description": "REST API for OpenClaw CRM — a self-hosted CRM. All endpoints require authentication via Bearer token or session cookie. Responses use envelope format: { data: ... } on success, { error: { code, message } } on error."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "Local development"
+    }
+  ],
+  "security": [
+    { "BearerAuth": [] }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API key token. Create via Settings > API Keys. Format: oc_sk_<48 hex chars>"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" }
+            },
+            "required": ["code", "message"]
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer" },
+          "offset": { "type": "integer" },
+          "total": { "type": "integer" }
+        }
+      },
+      "Object": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "slug": { "type": "string" },
+          "singularName": { "type": "string" },
+          "pluralName": { "type": "string" },
+          "icon": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Attribute": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "slug": { "type": "string" },
+          "title": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["text", "number", "currency", "date", "timestamp", "checkbox", "select", "status", "rating", "email_address", "phone_number", "domain", "location", "personal_name", "record_reference", "actor_reference", "interaction"]
+          },
+          "config": { "type": "object" },
+          "isRequired": { "type": "boolean" },
+          "isUnique": { "type": "boolean" },
+          "isMultiselect": { "type": "boolean" },
+          "sortOrder": { "type": "integer" }
+        }
+      },
+      "RecordValues": {
+        "type": "object",
+        "description": "Key-value pairs where keys are attribute slugs. Value format depends on attribute type.",
+        "additionalProperties": true
+      },
+      "Record": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "objectId": { "type": "string", "format": "uuid" },
+          "values": { "$ref": "#/components/schemas/RecordValues" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "FilterGroup": {
+        "type": "object",
+        "description": "Filter group with AND/OR logic",
+        "properties": {
+          "operator": { "type": "string", "enum": ["and", "or"] },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "attribute": { "type": "string", "description": "Attribute slug" },
+                "operator": { "type": "string", "enum": ["equals", "not_equals", "contains", "not_contains", "starts_with", "ends_with", "is_empty", "is_not_empty", "gt", "gte", "lt", "lte"] },
+                "value": { "description": "Filter value" }
+              }
+            }
+          }
+        }
+      },
+      "SortConfig": {
+        "type": "object",
+        "properties": {
+          "attribute": { "type": "string", "description": "Attribute slug" },
+          "direction": { "type": "string", "enum": ["asc", "desc"] }
+        }
+      },
+      "List": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "objectSlug": { "type": "string" },
+          "isPrivate": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ListEntry": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "recordId": { "type": "string", "format": "uuid" },
+          "values": { "$ref": "#/components/schemas/RecordValues" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "content": { "type": "string" },
+          "isCompleted": { "type": "boolean" },
+          "deadline": { "type": "string", "format": "date-time", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Note": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string", "nullable": true },
+          "content": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ApiKey": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "keyPrefix": { "type": "string" },
+          "name": { "type": "string" },
+          "scopes": { "type": "array", "items": { "type": "string" } },
+          "expiresAt": { "type": "string", "format": "date-time", "nullable": true },
+          "lastUsedAt": { "type": "string", "format": "date-time", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/objects": {
+      "get": {
+        "operationId": "listObjects",
+        "summary": "List all objects",
+        "tags": ["Objects"],
+        "responses": {
+          "200": {
+            "description": "List of objects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Object" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createObject",
+        "summary": "Create a new object type",
+        "tags": ["Objects"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["slug", "singularName", "pluralName"],
+                "properties": {
+                  "slug": { "type": "string" },
+                  "singularName": { "type": "string" },
+                  "pluralName": { "type": "string" },
+                  "icon": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Object created" }
+        }
+      }
+    },
+    "/api/v1/objects/{slug}": {
+      "parameters": [
+        { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Object slug (e.g. people, companies, deals)" }
+      ],
+      "get": {
+        "operationId": "getObject",
+        "summary": "Get object with attributes",
+        "tags": ["Objects"],
+        "responses": {
+          "200": { "description": "Object with attributes" }
+        }
+      },
+      "patch": {
+        "operationId": "updateObject",
+        "summary": "Update object",
+        "tags": ["Objects"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "singularName": { "type": "string" },
+                  "pluralName": { "type": "string" },
+                  "icon": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated object" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteObject",
+        "summary": "Delete object (admin only)",
+        "tags": ["Objects"],
+        "responses": {
+          "200": { "description": "Deleted" }
+        }
+      }
+    },
+    "/api/v1/objects/{slug}/attributes": {
+      "parameters": [
+        { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "operationId": "listAttributes",
+        "summary": "List attributes for object",
+        "tags": ["Attributes"],
+        "responses": {
+          "200": {
+            "description": "List of attributes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Attribute" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createAttribute",
+        "summary": "Create attribute",
+        "tags": ["Attributes"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["slug", "title", "type"],
+                "properties": {
+                  "slug": { "type": "string" },
+                  "title": { "type": "string" },
+                  "type": { "type": "string", "enum": ["text", "number", "currency", "date", "timestamp", "checkbox", "select", "status", "rating", "email_address", "phone_number", "domain", "location", "personal_name", "record_reference", "actor_reference", "interaction"] },
+                  "config": { "type": "object" },
+                  "isRequired": { "type": "boolean" },
+                  "isUnique": { "type": "boolean" },
+                  "isMultiselect": { "type": "boolean" },
+                  "options": { "type": "array", "items": { "type": "object" } },
+                  "statuses": { "type": "array", "items": { "type": "object" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Attribute created" }
+        }
+      },
+      "patch": {
+        "operationId": "updateAttribute",
+        "summary": "Update attribute",
+        "tags": ["Attributes"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["attributeId"],
+                "properties": {
+                  "attributeId": { "type": "string", "format": "uuid" },
+                  "title": { "type": "string" },
+                  "isRequired": { "type": "boolean" },
+                  "isUnique": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated attribute" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteAttribute",
+        "summary": "Delete attribute",
+        "tags": ["Attributes"],
+        "parameters": [
+          { "name": "attributeId", "in": "query", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Deleted" }
+        }
+      }
+    },
+    "/api/v1/objects/{slug}/attributes/options": {
+      "parameters": [
+        { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "operationId": "listAttributeOptions",
+        "summary": "List select/status options",
+        "tags": ["Attributes"],
+        "parameters": [
+          { "name": "attributeId", "in": "query", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Options or statuses" }
+        }
+      },
+      "post": {
+        "operationId": "createAttributeOption",
+        "summary": "Create select/status option",
+        "tags": ["Attributes"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["attributeId", "title"],
+                "properties": {
+                  "attributeId": { "type": "string", "format": "uuid" },
+                  "title": { "type": "string" },
+                  "color": { "type": "string" },
+                  "isActive": { "type": "boolean" },
+                  "celebrationEnabled": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Option created" }
+        }
+      },
+      "patch": {
+        "operationId": "updateAttributeOption",
+        "summary": "Update select/status option",
+        "tags": ["Attributes"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["optionId", "attributeType"],
+                "properties": {
+                  "optionId": { "type": "string", "format": "uuid" },
+                  "attributeType": { "type": "string", "enum": ["select", "status"] },
+                  "title": { "type": "string" },
+                  "color": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteAttributeOption",
+        "summary": "Delete select/status option",
+        "tags": ["Attributes"],
+        "parameters": [
+          { "name": "optionId", "in": "query", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "attributeType", "in": "query", "required": true, "schema": { "type": "string", "enum": ["select", "status"] } }
+        ],
+        "responses": {
+          "200": { "description": "Deleted" }
+        }
+      }
+    },
+    "/api/v1/objects/{slug}/records": {
+      "parameters": [
+        { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "operationId": "listRecords",
+        "summary": "List records for object",
+        "tags": ["Records"],
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50, "maximum": 200 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated records",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "records": { "type": "array", "items": { "$ref": "#/components/schemas/Record" } },
+                        "pagination": { "$ref": "#/components/schemas/Pagination" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createRecord",
+        "summary": "Create a record",
+        "tags": ["Records"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["values"],
+                "properties": {
+                  "values": { "$ref": "#/components/schemas/RecordValues" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Record created" }
+        }
+      }
+    },
+    "/api/v1/objects/{slug}/records/{recordId}": {
+      "parameters": [
+        { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "recordId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "get": {
+        "operationId": "getRecord",
+        "summary": "Get a single record",
+        "tags": ["Records"],
+        "responses": {
+          "200": { "description": "Record with values" }
+        }
+      },
+      "patch": {
+        "operationId": "updateRecord",
+        "summary": "Update record values",
+        "tags": ["Records"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["values"],
+                "properties": {
+                  "values": { "$ref": "#/components/schemas/RecordValues" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated record" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteRecord",
+        "summary": "Delete a record",
+        "tags": ["Records"],
+        "responses": {
+          "200": { "description": "Deleted" }
+        }
+      }
+    },
+    "/api/v1/objects/{slug}/records/query": {
+      "parameters": [
+        { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "post": {
+        "operationId": "queryRecords",
+        "summary": "Query records with filters and sorting",
+        "tags": ["Records"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "limit": { "type": "integer", "default": 50, "maximum": 200 },
+                  "offset": { "type": "integer", "default": 0 },
+                  "filter": { "$ref": "#/components/schemas/FilterGroup" },
+                  "sorts": { "type": "array", "items": { "$ref": "#/components/schemas/SortConfig" } },
+                  "mode": { "type": "string", "enum": ["assert"], "description": "Assert mode: find-or-create a record" },
+                  "matchAttribute": { "type": "string", "description": "Attribute slug to match on (assert mode)" },
+                  "matchValue": { "description": "Value to match (assert mode)" },
+                  "values": { "$ref": "#/components/schemas/RecordValues" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Filtered records with pagination" }
+        }
+      }
+    },
+    "/api/v1/objects/{slug}/records/{recordId}/related": {
+      "parameters": [
+        { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "recordId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "get": {
+        "operationId": "getRelatedRecords",
+        "summary": "Get related records (forward and inverse references)",
+        "tags": ["Records"],
+        "responses": {
+          "200": { "description": "Related and forward records" }
+        }
+      }
+    },
+    "/api/v1/objects/{slug}/records/{recordId}/activity": {
+      "parameters": [
+        { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "recordId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "get": {
+        "operationId": "getRecordActivity",
+        "summary": "Get activity feed for a record",
+        "tags": ["Records"],
+        "responses": {
+          "200": { "description": "Activity items sorted by date desc" }
+        }
+      }
+    },
+    "/api/v1/objects/{slug}/records/{recordId}/tasks": {
+      "parameters": [
+        { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "recordId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "get": {
+        "operationId": "getRecordTasks",
+        "summary": "Get tasks linked to a record",
+        "tags": ["Records"],
+        "responses": {
+          "200": { "description": "Tasks for record" }
+        }
+      }
+    },
+    "/api/v1/objects/{slug}/records/{recordId}/notes": {
+      "parameters": [
+        { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "recordId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "get": {
+        "operationId": "getRecordNotes",
+        "summary": "Get notes for a record",
+        "tags": ["Records"],
+        "responses": {
+          "200": { "description": "Notes for record" }
+        }
+      },
+      "post": {
+        "operationId": "createRecordNote",
+        "summary": "Create a note on a record",
+        "tags": ["Records"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "content": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Note created" }
+        }
+      }
+    },
+    "/api/v1/objects/{slug}/records/import": {
+      "parameters": [
+        { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "post": {
+        "operationId": "importRecords",
+        "summary": "Bulk import records (max 1000 rows)",
+        "tags": ["Records"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["rows"],
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "items": { "$ref": "#/components/schemas/RecordValues" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Import results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "created": { "type": "integer" },
+                        "errors": { "type": "array", "items": { "type": "object", "properties": { "row": { "type": "integer" }, "message": { "type": "string" } } } },
+                        "total": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lists": {
+      "get": {
+        "operationId": "listLists",
+        "summary": "List all lists",
+        "tags": ["Lists"],
+        "responses": {
+          "200": { "description": "Array of lists" }
+        }
+      },
+      "post": {
+        "operationId": "createList",
+        "summary": "Create a list",
+        "tags": ["Lists"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "objectSlug"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "objectSlug": { "type": "string" },
+                  "isPrivate": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "List created" }
+        }
+      }
+    },
+    "/api/v1/lists/{listId}": {
+      "parameters": [
+        { "name": "listId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "get": {
+        "operationId": "getList",
+        "summary": "Get a list",
+        "tags": ["Lists"],
+        "responses": {
+          "200": { "description": "List object" }
+        }
+      },
+      "patch": {
+        "operationId": "updateList",
+        "summary": "Update a list",
+        "tags": ["Lists"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "isPrivate": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated list" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteList",
+        "summary": "Delete a list",
+        "tags": ["Lists"],
+        "responses": {
+          "200": { "description": "Deleted" }
+        }
+      }
+    },
+    "/api/v1/lists/{listId}/attributes": {
+      "parameters": [
+        { "name": "listId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "get": {
+        "operationId": "listListAttributes",
+        "summary": "List attributes for a list",
+        "tags": ["Lists"],
+        "responses": {
+          "200": { "description": "Array of list attributes" }
+        }
+      },
+      "post": {
+        "operationId": "createListAttribute",
+        "summary": "Create list attribute",
+        "tags": ["Lists"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["slug", "title", "type"],
+                "properties": {
+                  "slug": { "type": "string" },
+                  "title": { "type": "string" },
+                  "type": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created" }
+        }
+      },
+      "patch": {
+        "operationId": "updateListAttribute",
+        "summary": "Update list attribute",
+        "tags": ["Lists"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": { "type": "string", "format": "uuid" },
+                  "title": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteListAttribute",
+        "summary": "Delete list attribute",
+        "tags": ["Lists"],
+        "parameters": [
+          { "name": "id", "in": "query", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Deleted" }
+        }
+      }
+    },
+    "/api/v1/lists/{listId}/entries": {
+      "parameters": [
+        { "name": "listId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "get": {
+        "operationId": "listEntries",
+        "summary": "List entries in a list",
+        "tags": ["Lists"],
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50, "maximum": 200 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated entries" }
+        }
+      },
+      "post": {
+        "operationId": "createEntry",
+        "summary": "Add a record to a list",
+        "tags": ["Lists"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["recordId"],
+                "properties": {
+                  "recordId": { "type": "string", "format": "uuid" },
+                  "values": { "$ref": "#/components/schemas/RecordValues" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Entry created" }
+        }
+      }
+    },
+    "/api/v1/lists/{listId}/entries/{entryId}": {
+      "parameters": [
+        { "name": "listId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+        { "name": "entryId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "patch": {
+        "operationId": "updateEntry",
+        "summary": "Update list entry values",
+        "tags": ["Lists"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["values"],
+                "properties": {
+                  "values": { "$ref": "#/components/schemas/RecordValues" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteEntry",
+        "summary": "Remove entry from list",
+        "tags": ["Lists"],
+        "responses": {
+          "200": { "description": "Deleted" }
+        }
+      }
+    },
+    "/api/v1/lists/{listId}/available-records": {
+      "parameters": [
+        { "name": "listId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "get": {
+        "operationId": "listAvailableRecords",
+        "summary": "Get records not yet in the list",
+        "tags": ["Lists"],
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Available records" }
+        }
+      }
+    },
+    "/api/v1/notes": {
+      "get": {
+        "operationId": "listNotes",
+        "summary": "List all notes",
+        "tags": ["Notes"],
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50, "maximum": 200 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated notes" }
+        }
+      }
+    },
+    "/api/v1/notes/{noteId}": {
+      "parameters": [
+        { "name": "noteId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "get": {
+        "operationId": "getNote",
+        "summary": "Get a note",
+        "tags": ["Notes"],
+        "responses": {
+          "200": { "description": "Note object" }
+        }
+      },
+      "patch": {
+        "operationId": "updateNote",
+        "summary": "Update a note",
+        "tags": ["Notes"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "content": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated note" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteNote",
+        "summary": "Delete a note",
+        "tags": ["Notes"],
+        "responses": {
+          "200": { "description": "Deleted" }
+        }
+      }
+    },
+    "/api/v1/tasks": {
+      "get": {
+        "operationId": "listTasks",
+        "summary": "List tasks",
+        "tags": ["Tasks"],
+        "parameters": [
+          { "name": "showCompleted", "in": "query", "schema": { "type": "string", "enum": ["true", "false"] } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50, "maximum": 200 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated tasks" }
+        }
+      },
+      "post": {
+        "operationId": "createTask",
+        "summary": "Create a task",
+        "tags": ["Tasks"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["content"],
+                "properties": {
+                  "content": { "type": "string" },
+                  "deadline": { "type": "string", "format": "date-time" },
+                  "recordIds": { "type": "array", "items": { "type": "string", "format": "uuid" } },
+                  "assigneeIds": { "type": "array", "items": { "type": "string", "format": "uuid" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Task created" }
+        }
+      }
+    },
+    "/api/v1/tasks/{taskId}": {
+      "parameters": [
+        { "name": "taskId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "patch": {
+        "operationId": "updateTask",
+        "summary": "Update a task",
+        "tags": ["Tasks"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": { "type": "string" },
+                  "isCompleted": { "type": "boolean" },
+                  "deadline": { "type": "string", "format": "date-time" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated task" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteTask",
+        "summary": "Delete a task",
+        "tags": ["Tasks"],
+        "responses": {
+          "200": { "description": "Deleted" }
+        }
+      }
+    },
+    "/api/v1/workspace": {
+      "get": {
+        "operationId": "getWorkspace",
+        "summary": "Get current workspace",
+        "tags": ["Workspace"],
+        "responses": {
+          "200": { "description": "Workspace object" }
+        }
+      },
+      "patch": {
+        "operationId": "updateWorkspace",
+        "summary": "Update workspace (admin only)",
+        "tags": ["Workspace"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated workspace" }
+        }
+      }
+    },
+    "/api/v1/workspace-members": {
+      "get": {
+        "operationId": "listMembers",
+        "summary": "List workspace members",
+        "tags": ["Workspace"],
+        "responses": {
+          "200": { "description": "Array of members" }
+        }
+      },
+      "post": {
+        "operationId": "addMember",
+        "summary": "Add workspace member (admin only)",
+        "tags": ["Workspace"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "role": { "type": "string", "enum": ["admin", "member"], "default": "member" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Member added" }
+        }
+      }
+    },
+    "/api/v1/workspace-members/{memberId}": {
+      "parameters": [
+        { "name": "memberId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "patch": {
+        "operationId": "updateMember",
+        "summary": "Update member role (admin only)",
+        "tags": ["Workspace"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["role"],
+                "properties": {
+                  "role": { "type": "string", "enum": ["admin", "member"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated" }
+        }
+      },
+      "delete": {
+        "operationId": "removeMember",
+        "summary": "Remove member (admin only)",
+        "tags": ["Workspace"],
+        "responses": {
+          "200": { "description": "Removed" }
+        }
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "operationId": "listNotifications",
+        "summary": "List notifications",
+        "tags": ["Notifications"],
+        "parameters": [
+          { "name": "unreadOnly", "in": "query", "schema": { "type": "string", "enum": ["true", "false"] } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 30, "maximum": 100 } }
+        ],
+        "responses": {
+          "200": { "description": "Notifications with unread count" }
+        }
+      }
+    },
+    "/api/v1/notifications/{notificationId}": {
+      "parameters": [
+        { "name": "notificationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "patch": {
+        "operationId": "markNotificationRead",
+        "summary": "Mark notification as read",
+        "tags": ["Notifications"],
+        "responses": {
+          "200": { "description": "Marked as read" }
+        }
+      }
+    },
+    "/api/v1/notifications/mark-all-read": {
+      "post": {
+        "operationId": "markAllNotificationsRead",
+        "summary": "Mark all notifications as read",
+        "tags": ["Notifications"],
+        "responses": {
+          "200": { "description": "All marked as read" }
+        }
+      }
+    },
+    "/api/v1/search": {
+      "get": {
+        "operationId": "search",
+        "summary": "Global search across all records",
+        "tags": ["Search"],
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Search query" },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 50 } }
+        ],
+        "responses": {
+          "200": { "description": "Search results" }
+        }
+      }
+    },
+    "/api/v1/records/browse": {
+      "get": {
+        "operationId": "browseRecords",
+        "summary": "Browse recent records across all objects",
+        "tags": ["Search"],
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 50 } }
+        ],
+        "responses": {
+          "200": { "description": "Recent records with display info" }
+        }
+      }
+    },
+    "/api/v1/api-keys": {
+      "get": {
+        "operationId": "listApiKeys",
+        "summary": "List API keys (admin only)",
+        "tags": ["API Keys"],
+        "responses": {
+          "200": { "description": "Array of API keys (prefix only, never full key)" }
+        }
+      },
+      "post": {
+        "operationId": "createApiKey",
+        "summary": "Create API key (admin only)",
+        "tags": ["API Keys"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string", "description": "Human-readable label" },
+                  "scopes": { "type": "array", "items": { "type": "string" }, "default": ["*"] },
+                  "expiresAt": { "type": "string", "format": "date-time" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "API key created. The full key is returned ONCE in this response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "format": "uuid" },
+                        "key": { "type": "string", "description": "Full API key (shown only once)" },
+                        "keyPrefix": { "type": "string" },
+                        "name": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/api-keys/{keyId}": {
+      "parameters": [
+        { "name": "keyId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "delete": {
+        "operationId": "revokeApiKey",
+        "summary": "Revoke API key (admin only)",
+        "tags": ["API Keys"],
+        "responses": {
+          "200": { "description": "Key revoked" }
+        }
+      }
+    }
+  }
+}

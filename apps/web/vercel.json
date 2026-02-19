@@ -1,0 +1,4 @@
+{
+  "buildCommand": "cd ../.. && npx turbo build --filter=@openclaw-crm/web",
+  "installCommand": "cd ../.. && pnpm install"
+}

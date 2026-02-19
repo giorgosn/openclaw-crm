@@ -1,0 +1,68 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+
+# Build
+dist/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Turbo
+.turbo/
+
+# Docker
+postgres-data/
+
+# Claude (keep agents + settings.json, exclude local secrets)
+.claude/settings.local.json
+
+# Private strategy and execution docs
+marketing/
+.claude/writers/
+.claude/agents/writer-*.md
+
+# Internal dev docs (not needed by end users)
+docs/
+frontend-redesign/
+ASK.md
+ATTIO_RESEARCH.md
+DIFFERENCES.md
+CLAUDE.md
+.claude/
+
+# Old page versions
+apps/web/src/app/docs/page-v1.tsx
+apps/web/src/app/docs/page-v2.tsx
+apps/web/src/app/docs/page-v3.tsx
+
+# Test/cleanup scripts
+apps/web/cleanup-notes.mjs
+apps/web/test-api-output.mjs
+apps/web/test-db.mjs
+
+# Reference photos
+photos/
+
+# Misc
+*.log
+npm-debug.log*
+
+.vercel

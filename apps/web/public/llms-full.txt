@@ -1,0 +1,362 @@
+# OpenClaw CRM — Complete Product Documentation
+# Version: 1.0
+# For API endpoint reference only, see: /llms.txt
+# OpenAPI spec: /openapi.json
+
+## What is OpenClaw CRM?
+
+OpenClaw CRM is a free, open-source, self-hosted CRM (Customer Relationship Manager). It is a clone of Attio (attio.com) designed for everyday users. It runs on your own server — no vendor lock-in, no per-seat pricing, no data leaving your infrastructure.
+
+Stack: Next.js 15, TypeScript, PostgreSQL, Drizzle ORM, Better Auth, shadcn/ui, TanStack Table, dnd-kit, TipTap.
+
+Deployment: Docker Compose (PostgreSQL container + Next.js app).
+
+## Core Concepts
+
+### Objects
+Objects are schema types — like tables in a database. Built-in objects: People, Companies, Deals. You can create custom objects with any slug, name, and icon.
+
+### Records
+Records are individual entries within an object. A person is a record in the People object. A deal is a record in the Deals object.
+
+### Attributes
+Attributes are the fields (columns) on an object. Each attribute has a type that determines what kind of data it stores and how it's displayed.
+
+### Typed EAV Data Model
+OpenClaw CRM uses a hybrid typed Entity-Attribute-Value model. The `record_values` table stores values per-attribute with typed columns:
+- text_value (text, email_address, phone_number, domain, location)
+- number_value (number, currency, rating)
+- date_value (date)
+- timestamp_value (timestamp)
+- boolean_value (checkbox)
+- json_value (personal_name, interaction, and complex types)
+- reference_id (record_reference, actor_reference)
+- option_id (select, status)
+
+This allows unlimited custom attributes without schema migrations.
+
+## All 17 Attribute Types
+
+| Type | Storage | Description | Example Value |
+|------|---------|-------------|---------------|
+| text | text_value | Free-form text | "Hello world" |
+| number | number_value | Numeric value | 42 |
+| currency | number_value | Monetary amount | 99.99 |
+| date | date_value | Calendar date | "2025-01-15" |
+| timestamp | timestamp_value | Date and time | "2025-01-15T10:30:00Z" |
+| checkbox | boolean_value | True/false toggle | true |
+| select | option_id | Single choice from options | "High Priority" (option title) |
+| status | option_id | Pipeline stage or status | "In Progress" (status title) |
+| rating | number_value | Integer 1-5 star rating | 4 |
+| email_address | text_value | Email address | "user@example.com" |
+| phone_number | text_value | Phone number | "+1-555-0123" |
+| domain | text_value | Website domain/URL | "example.com" |
+| location | text_value | Geographic location | "San Francisco, CA" |
+| personal_name | json_value | First + last name | {"first_name": "Jane", "last_name": "Doe"} |
+| record_reference | reference_id | Link to another record | "uuid-of-target-record" |
+| actor_reference | reference_id | Link to a user | "uuid-of-user" |
+| interaction | json_value | Communication log | {"type": "email", "subject": "Re: Deal"} |
+
+## Features
+
+### People & Companies
+- Table view with sortable, resizable columns
+- Inline editing — click any cell to edit
+- Add custom attributes (columns) via the + header button
+- Record detail page with tabs: Overview, Notes, Tasks, Related
+- Record references allow linking people to companies and vice versa
+
+### Deals & Pipeline
+- Kanban board view with drag-and-drop between stages
+- Table view with all deal attributes
+- Built-in stage attribute (status type) for pipeline visualization
+- Default stages: Lead, Qualified, Proposal Sent, Negotiation, Closed Won, Closed Lost
+- Customizable stages with colors
+
+### Tasks
+- Create tasks linked to any record (person, company, deal)
+- Set due dates and assignees
+- Mark complete/incomplete with checkbox toggle
+- View tasks globally (Tasks page) or per-record (detail page)
+- Filter: show/hide completed tasks
+
+### Notes
+- Rich text editor (TipTap) with formatting: bold, italic, headings, lists, links
+- Attached to records — view per-record or globally
+- Auto-save as you type
+
+### Lists
+- Curated collections of records from any object type
+- List-specific custom attributes (columns that only exist on the list)
+- Add/remove records from lists
+- Each list tracks entry count
+
+### AI Chat Agent
+- Built-in conversational AI assistant
+- Powered by OpenRouter (supports Claude, GPT-4o, Llama, and more)
+- Streaming responses via SSE
+- 8 read tools (auto-execute): search_records, get_record, list_objects, list_records, get_record_details, list_tasks, list_notes, get_workspace_info
+- 5 write tools (require user confirmation): create_record, update_record, delete_record, create_task, create_note
+- Conversation history with sidebar
+- Configuration at Settings > AI
+
+### Search
+- Global search via Ctrl+K / Cmd+K
+- PostgreSQL full-text search across all record types
+- Results show record type, name, and key attributes
+- Browse recent records at /api/v1/records/browse
+
+### Views
+- Table view: TanStack Table with sorting, filtering, column resizing, pagination
+- Kanban view: dnd-kit drag-and-drop, grouped by status attribute
+- Toggle between views per object
+
+### Filters
+- Attribute-based filtering with operators: equals, not_equals, contains, not_contains, starts_with, ends_with, is_empty, is_not_empty, gt, gte, lt, lte
+- Combine conditions with AND/OR logic
+- Applied via query API or UI filter panel
+
+### Notifications
+- In-app notification system
+- Mark as read / mark all as read
+- Accessible from sidebar Bell icon
+
+## UI Navigation
+
+### Sidebar (authenticated)
+- **Home** — Dashboard with greeting, stats, recent records, quick actions
+- **Chat** — AI assistant
+- **Tasks** — Global task list
+- **Notes** — All notes across records
+- **Notifications** — In-app notifications
+- **Records section**: People, Companies, Deals
+- **Lists section**: User-created lists with + button to create new
+- **Bottom**: Docs, Settings
+
+### Landing Page (unauthenticated)
+- Public page at /
+- Links: Docs, Log in, Get Started
+- Feature overview, AI spotlight, CTA
+
+### Record Detail Page
+- Accessed by clicking any record in table/kanban view
+- Tabs: Overview (attributes), Notes, Tasks, Related records
+- Inline editing of all attribute values
+- Activity feed
+
+### Settings Pages
+- /settings — General workspace settings
+- /settings/members — Team member management
+- /settings/api-keys — API key management
+- /settings/ai — OpenRouter API key + model configuration
+
+## Authentication
+
+- Better Auth with email/password registration
+- Session-based auth with cookies (better-auth.session_token)
+- API key auth for programmatic access (Authorization: Bearer oc_sk_...)
+- Middleware redirects unauthenticated users to /login
+- Workspace selection after login (cookie: active-workspace-id)
+
+## Data Model (Database Schema)
+
+### Core Tables
+- **workspaces** — Workspace with name, slug, settings (jsonb)
+- **workspace_memberships** — User-workspace link with role (owner/admin/member)
+- **objects** — Schema types (People, Companies, Deals, custom)
+- **attributes** — Fields on objects (slug, title, type, config, sort_order)
+- **attribute_options** — Select/status option values with colors
+- **records** — Individual entries in objects
+- **record_values** — Typed EAV values (text_value, number_value, date_value, etc.)
+
+### Feature Tables
+- **tasks** — Tasks with content, deadline, completion status, linked records
+- **notes** — Rich text notes linked to records
+- **lists** — Curated record collections
+- **list_entries** — Records in a list with list-specific values
+- **list_attributes** — Custom columns on lists
+- **notifications** — In-app notification entries
+
+### AI Tables
+- **conversations** — Chat conversation threads
+- **messages** — Individual messages with role, content, tool calls
+
+### Auth Tables (Better Auth)
+- **user**, **session**, **account**, **verification** — Managed by Better Auth
+
+## API Reference
+
+Base URL: http://localhost:3001
+Auth: Bearer token — Authorization: Bearer oc_sk_<token>
+Create API keys at Settings > API Keys.
+
+### Response Format
+- Success: { "data": <payload> }
+- Error: { "error": { "code": "ERROR_CODE", "message": "description" } }
+- Paginated: { "data": { "records": [...], "pagination": { "limit": 50, "offset": 0, "total": 123 } } }
+
+### Objects
+GET    /api/v1/objects                              — List all objects
+POST   /api/v1/objects                              — Create object {slug, singularName, pluralName, icon?}
+GET    /api/v1/objects/:slug                         — Get object with attributes
+PATCH  /api/v1/objects/:slug                         — Update object
+DELETE /api/v1/objects/:slug                         — Delete object (admin)
+
+### Attributes
+GET    /api/v1/objects/:slug/attributes              — List attributes
+POST   /api/v1/objects/:slug/attributes              — Create attribute {slug, title, type, config?, isRequired?, isUnique?, isMultiselect?, options?, statuses?}
+PATCH  /api/v1/objects/:slug/attributes              — Update attribute {attributeId, ...fields}
+DELETE /api/v1/objects/:slug/attributes?attributeId=  — Delete attribute
+
+### Attribute Options
+GET    /api/v1/objects/:slug/attributes/options?attributeId=  — List options
+POST   /api/v1/objects/:slug/attributes/options              — Create option {attributeId, title, color?, isActive?}
+PATCH  /api/v1/objects/:slug/attributes/options              — Update option {optionId, attributeType, ...fields}
+DELETE /api/v1/objects/:slug/attributes/options?optionId=&attributeType=  — Delete option
+
+### Records
+GET    /api/v1/objects/:slug/records?limit=50&offset=0       — List records (paginated)
+POST   /api/v1/objects/:slug/records                          — Create record {values: {attr_slug: value}}
+GET    /api/v1/objects/:slug/records/:recordId                — Get single record
+PATCH  /api/v1/objects/:slug/records/:recordId                — Update record {values: {attr_slug: value}}
+DELETE /api/v1/objects/:slug/records/:recordId                — Delete record
+
+### Record Query (filter + sort)
+POST   /api/v1/objects/:slug/records/query
+  Body: {limit?, offset?, filter?: FilterGroup, sorts?: SortConfig[]}
+  Filter: {operator: "and"|"or", conditions: [{attribute, operator, value}]}
+  Operators: equals, not_equals, contains, not_contains, starts_with, ends_with, is_empty, is_not_empty, gt, gte, lt, lte
+  Sort: {attribute: "slug", direction: "asc"|"desc"}
+  Assert mode: {mode: "assert", matchAttribute, matchValue, values} — find-or-create
+
+### Record Relations & Activity
+GET    /api/v1/objects/:slug/records/:recordId/related   — Related records
+GET    /api/v1/objects/:slug/records/:recordId/activity  — Activity feed
+GET    /api/v1/objects/:slug/records/:recordId/tasks     — Tasks linked to record
+GET    /api/v1/objects/:slug/records/:recordId/notes     — Notes on record
+POST   /api/v1/objects/:slug/records/:recordId/notes     — Create note {title?, content?}
+
+### Bulk Import
+POST   /api/v1/objects/:slug/records/import    — Import up to 1000 records {rows: [{attr_slug: value, ...}]}
+
+### Lists
+GET    /api/v1/lists                                     — List all lists
+POST   /api/v1/lists                                     — Create list {name, objectSlug, isPrivate?}
+GET    /api/v1/lists/:listId                              — Get list
+PATCH  /api/v1/lists/:listId                              — Update list
+DELETE /api/v1/lists/:listId                              — Delete list
+
+### List Attributes
+GET    /api/v1/lists/:listId/attributes                   — List list-specific attributes
+POST   /api/v1/lists/:listId/attributes                   — Create list attribute {slug, title, type}
+PATCH  /api/v1/lists/:listId/attributes                   — Update list attribute {id, ...fields}
+DELETE /api/v1/lists/:listId/attributes?id=               — Delete list attribute
+
+### List Entries
+GET    /api/v1/lists/:listId/entries?limit=50&offset=0    — List entries (paginated)
+POST   /api/v1/lists/:listId/entries                      — Add record to list {recordId, values?}
+PATCH  /api/v1/lists/:listId/entries/:entryId             — Update entry values {values}
+DELETE /api/v1/lists/:listId/entries/:entryId             — Remove entry from list
+GET    /api/v1/lists/:listId/available-records?search=    — Records not in this list
+
+### Notes
+GET    /api/v1/notes?limit=50&offset=0                    — List all notes (paginated)
+GET    /api/v1/notes/:noteId                              — Get note
+PATCH  /api/v1/notes/:noteId                              — Update note {title?, content?}
+DELETE /api/v1/notes/:noteId                              — Delete note
+
+### Tasks
+GET    /api/v1/tasks?showCompleted=false&limit=50&offset=0  — List tasks (paginated)
+POST   /api/v1/tasks                                        — Create task {content, deadline?, recordIds?, assigneeIds?}
+PATCH  /api/v1/tasks/:taskId                                — Update task {content?, isCompleted?, deadline?}
+DELETE /api/v1/tasks/:taskId                                — Delete task
+
+### Workspace
+GET    /api/v1/workspace                                 — Get workspace
+PATCH  /api/v1/workspace                                 — Update workspace (admin) {name?}
+
+### Workspace Members
+GET    /api/v1/workspace-members                         — List members
+POST   /api/v1/workspace-members                         — Add member (admin) {email, role?}
+PATCH  /api/v1/workspace-members/:memberId               — Update role (admin) {role}
+DELETE /api/v1/workspace-members/:memberId               — Remove member (admin)
+
+### Notifications
+GET    /api/v1/notifications?unreadOnly=false&limit=30   — List notifications
+PATCH  /api/v1/notifications/:notificationId             — Mark as read
+POST   /api/v1/notifications/mark-all-read               — Mark all as read
+
+### Search
+GET    /api/v1/search?q=query&limit=20                   — Global search
+GET    /api/v1/records/browse?limit=20                   — Browse recent records
+
+### API Keys (admin only)
+GET    /api/v1/api-keys                                  — List API keys
+POST   /api/v1/api-keys                                  — Create key {name, scopes?, expiresAt?}
+DELETE /api/v1/api-keys/:keyId                           — Revoke key
+
+### AI Chat
+POST   /api/v1/chat/completions                         — Send message (SSE streaming) {conversationId?, message}
+POST   /api/v1/chat/tool-confirm                         — Confirm/deny write tool {conversationId, toolCallId, approved}
+GET    /api/v1/chat/conversations                        — List conversations
+GET    /api/v1/chat/conversations/:id                    — Get conversation with messages
+DELETE /api/v1/chat/conversations/:id                    — Delete conversation
+
+## Value Formats by Attribute Type
+
+| Type | Format | Example |
+|------|--------|---------|
+| text | string | "Hello world" |
+| number | number | 42 |
+| currency | number | 99.99 |
+| date | ISO date string | "2025-01-15" |
+| timestamp | ISO datetime | "2025-01-15T10:30:00Z" |
+| checkbox | boolean | true |
+| select | option title string | "High Priority" |
+| status | status title string | "In Progress" |
+| rating | integer 1-5 | 4 |
+| email_address | email string | "user@example.com" |
+| phone_number | string | "+1-555-0123" |
+| domain | URL/domain string | "example.com" |
+| location | string | "San Francisco, CA" |
+| personal_name | object | {"first_name": "Jane", "last_name": "Doe"} |
+| record_reference | record UUID | "uuid-of-target-record" |
+| actor_reference | user UUID | "uuid-of-user" |
+| interaction | object | {"type": "email", "subject": "Re: Deal"} |
+
+## Self-Hosting
+
+### Requirements
+- Docker and Docker Compose
+- Node.js 18+ (for development)
+
+### Quick Start
+1. Clone the repository
+2. Copy .env.example to .env and configure database URL and auth secrets
+3. Run `docker-compose up -d` to start PostgreSQL
+4. Run `pnpm install && pnpm db:push && pnpm db:seed` to set up the database
+5. Run `pnpm dev` to start the development server on port 3001
+6. Open http://localhost:3001, register an account, and create a workspace
+
+### Environment Variables
+- DATABASE_URL — PostgreSQL connection string
+- BETTER_AUTH_SECRET — Auth encryption secret
+- BETTER_AUTH_URL — Base URL of the app (http://localhost:3001)
+
+## Error Codes
+
+| Code | HTTP | Meaning |
+|------|------|---------|
+| UNAUTHORIZED | 401 | Missing or invalid auth |
+| FORBIDDEN | 403 | Insufficient permissions (admin required) |
+| NOT_FOUND | 404 | Resource not found |
+| BAD_REQUEST | 400 | Invalid input |
+| INTERNAL_ERROR | 500 | Server error |
+
+## Notes
+- All IDs are UUIDs
+- Timestamps are ISO 8601 format
+- Pagination defaults: limit=50, offset=0 (max limit varies by endpoint, usually 200)
+- Admin-only endpoints: DELETE objects, workspace updates, member management, API key management
+- No rate limits enforced (self-hosted)
+- Single-tenant: one workspace per install (multi-workspace supported but designed for single)

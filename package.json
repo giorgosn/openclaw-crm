@@ -1,0 +1,18 @@
+{
+  "name": "openclaw-crm",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "db:generate": "turbo run db:generate --filter=@openclaw-crm/web",
+    "db:migrate": "turbo run db:migrate --filter=@openclaw-crm/web",
+    "db:push": "turbo run db:push --filter=@openclaw-crm/web",
+    "db:seed": "turbo run db:seed --filter=@openclaw-crm/web"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.7.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
