@@ -1,226 +1,53 @@
-# OpenClaw CRM API Reference
-# For complete product documentation, features, and data model: /llms-full.txt
-# Base URL: http://localhost:3001
-# Auth: Bearer token — Authorization: Bearer oc_sk_<token>
-# Create API keys at Settings > API Keys in the web UI
-# OpenAPI spec: /openapi.json
+# OpenClaw CRM
 
-## Quick Start
+> The CRM your AI agent already knows how to use. Open-source, self-hosted, with native OpenClaw Bot integration.
 
-```bash
-# Set your API key
-export OPENCLAW_KEY="oc_sk_..."
+## Overview
 
-# List all object types
-curl -H "Authorization: Bearer $OPENCLAW_KEY" http://localhost:3001/api/v1/objects
+OpenClaw CRM is a free, open-source, self-hosted CRM built for AI-native workflows. It ships with a full REST API, machine-readable documentation, and first-class OpenClaw Bot integration so your AI agent can manage contacts, deals, tasks, and notes without any glue code.
 
-# List people records
-curl -H "Authorization: Bearer $OPENCLAW_KEY" http://localhost:3001/api/v1/objects/people/records
+- Website: https://openclaw-crm.402box.io
+- Docs: https://openclaw-crm.402box.io/docs
+- GitHub: https://github.com/giorgosn/openclaw-crm
+- License: MIT
 
-# Create a person
-curl -X POST http://localhost:3001/api/v1/objects/people/records \
-  -H "Authorization: Bearer $OPENCLAW_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"values": {"name": {"first_name": "Jane", "last_name": "Doe"}, "email_addresses": "jane@example.com"}}'
+## Key Pages
 
-# Search across all records
-curl -H "Authorization: Bearer $OPENCLAW_KEY" "http://localhost:3001/api/v1/search?q=Jane"
+- [Homepage](https://openclaw-crm.402box.io): product overview, features, and signup
+- [Documentation](https://openclaw-crm.402box.io/docs): setup guides, OpenClaw Bot integration, API keys, data import
+- [Blog](https://openclaw-crm.402box.io/blog): product updates and guides
+- [Comparisons](https://openclaw-crm.402box.io/compare): how OpenClaw CRM compares to other CRMs
 
-# Query with filters
-curl -X POST http://localhost:3001/api/v1/objects/deals/records/query \
-  -H "Authorization: Bearer $OPENCLAW_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"filter": {"operator": "and", "conditions": [{"attribute": "deal_value", "operator": "gte", "value": 10000}]}, "sorts": [{"attribute": "deal_value", "direction": "desc"}]}'
-```
+## What It Does
 
-## Response Format
+- **People & Companies**: manage contacts and organizations with 17 attribute types
+- **Deals & Pipeline**: drag-and-drop Kanban boards with customizable stages
+- **Tasks & Notes**: linked to any record with rich text editing and deadlines
+- **Lists**: curated collections with list-specific custom attributes
+- **Search**: full-text search across all records
+- **Custom Objects**: create your own entity types beyond People, Companies, and Deals
+- **AI Chat Agent**: talk to your CRM data in plain English via OpenRouter (Claude, GPT-4o, Llama, Gemini)
+- **CSV Import/Export**: bulk data import with column mapping
+- **Dark & Light Mode**: full theme support
 
-All responses use envelope format:
-- Success: `{ "data": <payload> }`
-- Error: `{ "error": { "code": "ERROR_CODE", "message": "description" } }`
-- Paginated: `{ "data": { "records": [...], "pagination": { "limit": 50, "offset": 0, "total": 123 } } }`
+## OpenClaw Bot Integration
 
-## Endpoints
+Generate a SKILL.md and config from Settings > OpenClaw, drop them into your OpenClaw Bot's skills folder, and your agent can manage your CRM through natural language. 40+ API endpoints, bearer token auth, machine-readable docs.
 
-### Objects (schema types like People, Companies, Deals)
-GET    /api/v1/objects                              — List all objects
-POST   /api/v1/objects                              — Create object {slug, singularName, pluralName, icon?}
-GET    /api/v1/objects/:slug                         — Get object with attributes
-PATCH  /api/v1/objects/:slug                         — Update object
-DELETE /api/v1/objects/:slug                         — Delete object (admin)
+## Tech Stack
 
-### Attributes (fields on objects)
-GET    /api/v1/objects/:slug/attributes              — List attributes
-POST   /api/v1/objects/:slug/attributes              — Create attribute {slug, title, type, config?, isRequired?, isUnique?, isMultiselect?, options?, statuses?}
-PATCH  /api/v1/objects/:slug/attributes              — Update attribute {attributeId, ...fields}
-DELETE /api/v1/objects/:slug/attributes?attributeId=  — Delete attribute
+Next.js 15 (App Router), TypeScript, PostgreSQL 16, Drizzle ORM, Better Auth, shadcn/ui, Tailwind CSS v4, TanStack Table, dnd-kit, TipTap, OpenRouter.
 
-### Attribute Options (select/status values)
-GET    /api/v1/objects/:slug/attributes/options?attributeId=  — List options
-POST   /api/v1/objects/:slug/attributes/options              — Create option {attributeId, title, color?, isActive?}
-PATCH  /api/v1/objects/:slug/attributes/options              — Update option {optionId, attributeType, ...fields}
-DELETE /api/v1/objects/:slug/attributes/options?optionId=&attributeType=  — Delete option
+## API
 
-### Records (data entries)
-GET    /api/v1/objects/:slug/records?limit=50&offset=0       — List records (paginated)
-POST   /api/v1/objects/:slug/records                          — Create record {values: {attr_slug: value}}
-GET    /api/v1/objects/:slug/records/:recordId                — Get single record
-PATCH  /api/v1/objects/:slug/records/:recordId                — Update record {values: {attr_slug: value}}
-DELETE /api/v1/objects/:slug/records/:recordId                — Delete record
+Full REST API at `/api/v1/` with Bearer token authentication (`oc_sk_` prefix).
 
-### Record Query (filter + sort)
-POST   /api/v1/objects/:slug/records/query
-  Body: {limit?, offset?, filter?: FilterGroup, sorts?: SortConfig[]}
-  Filter: {operator: "and"|"or", conditions: [{attribute, operator, value}]}
-  Operators: equals, not_equals, contains, not_contains, starts_with, ends_with, is_empty, is_not_empty, gt, gte, lt, lte
-  Sort: {attribute: "slug", direction: "asc"|"desc"}
-  Assert mode: {mode: "assert", matchAttribute, matchValue, values} — find-or-create
+- Concise API reference: https://openclaw-crm.402box.io/llms-api.txt
+- Full product + API docs: https://openclaw-crm.402box.io/llms-full.txt
+- OpenAPI spec: https://openclaw-crm.402box.io/openapi.json
 
-### Record Relations & Activity
-GET    /api/v1/objects/:slug/records/:recordId/related   — Related records (forward + inverse refs)
-GET    /api/v1/objects/:slug/records/:recordId/activity  — Activity feed
-GET    /api/v1/objects/:slug/records/:recordId/tasks     — Tasks linked to record
-GET    /api/v1/objects/:slug/records/:recordId/notes     — Notes on record
-POST   /api/v1/objects/:slug/records/:recordId/notes     — Create note {title?, content?}
+## Self-Hosting
 
-### Bulk Import
-POST   /api/v1/objects/:slug/records/import    — Import up to 1000 records {rows: [{attr_slug: value, ...}]}
-  Response: {created, errors: [{row, message}], total}
+Docker Compose deployment. Clone the repo, configure `.env`, run `docker compose up`. No vendor lock-in, no per-seat pricing, no data leaving your infrastructure.
 
-### Lists (curated collections of records)
-GET    /api/v1/lists                                     — List all lists
-POST   /api/v1/lists                                     — Create list {name, objectSlug, isPrivate?}
-GET    /api/v1/lists/:listId                              — Get list
-PATCH  /api/v1/lists/:listId                              — Update list
-DELETE /api/v1/lists/:listId                              — Delete list
-
-### List Attributes
-GET    /api/v1/lists/:listId/attributes                   — List list-specific attributes
-POST   /api/v1/lists/:listId/attributes                   — Create list attribute {slug, title, type}
-PATCH  /api/v1/lists/:listId/attributes                   — Update list attribute {id, ...fields}
-DELETE /api/v1/lists/:listId/attributes?id=               — Delete list attribute
-
-### List Entries
-GET    /api/v1/lists/:listId/entries?limit=50&offset=0    — List entries (paginated)
-POST   /api/v1/lists/:listId/entries                      — Add record to list {recordId, values?}
-PATCH  /api/v1/lists/:listId/entries/:entryId             — Update entry values {values}
-DELETE /api/v1/lists/:listId/entries/:entryId             — Remove entry from list
-GET    /api/v1/lists/:listId/available-records?search=    — Records not in this list
-
-### Notes
-GET    /api/v1/notes?limit=50&offset=0                    — List all notes (paginated)
-GET    /api/v1/notes/:noteId                              — Get note
-PATCH  /api/v1/notes/:noteId                              — Update note {title?, content?}
-DELETE /api/v1/notes/:noteId                              — Delete note
-
-### Tasks
-GET    /api/v1/tasks?showCompleted=false&limit=50&offset=0  — List tasks (paginated)
-POST   /api/v1/tasks                                        — Create task {content, deadline?, recordIds?, assigneeIds?}
-PATCH  /api/v1/tasks/:taskId                                — Update task {content?, isCompleted?, deadline?}
-DELETE /api/v1/tasks/:taskId                                — Delete task
-
-### Workspace
-GET    /api/v1/workspace                                 — Get workspace
-PATCH  /api/v1/workspace                                 — Update workspace (admin) {name?}
-
-### Workspace Members
-GET    /api/v1/workspace-members                         — List members
-POST   /api/v1/workspace-members                         — Add member (admin) {email, role?}
-PATCH  /api/v1/workspace-members/:memberId               — Update role (admin) {role}
-DELETE /api/v1/workspace-members/:memberId               — Remove member (admin)
-
-### Notifications
-GET    /api/v1/notifications?unreadOnly=false&limit=30   — List notifications
-PATCH  /api/v1/notifications/:notificationId             — Mark as read
-POST   /api/v1/notifications/mark-all-read               — Mark all as read
-
-### Search
-GET    /api/v1/search?q=query&limit=20                   — Global search
-GET    /api/v1/records/browse?limit=20                   — Browse recent records
-
-### API Keys (admin only)
-GET    /api/v1/api-keys                                  — List API keys
-POST   /api/v1/api-keys                                  — Create key {name, scopes?, expiresAt?}
-DELETE /api/v1/api-keys/:keyId                           — Revoke key
-
-## Value Formats by Attribute Type
-
-When setting record values, use these formats:
-
-| Type | Format | Example |
-|------|--------|---------|
-| text | string | `"Hello world"` |
-| number | number | `42` |
-| currency | number | `99.99` |
-| date | ISO date string | `"2025-01-15"` |
-| timestamp | ISO datetime | `"2025-01-15T10:30:00Z"` |
-| checkbox | boolean | `true` |
-| select | option title string | `"High Priority"` |
-| status | status title string | `"In Progress"` |
-| rating | integer 1-5 | `4` |
-| email_address | email string | `"user@example.com"` |
-| phone_number | string | `"+1-555-0123"` |
-| domain | URL/domain string | `"example.com"` |
-| location | string | `"San Francisco, CA"` |
-| personal_name | object | `{"first_name": "Jane", "last_name": "Doe"}` |
-| record_reference | record UUID | `"uuid-of-target-record"` |
-| actor_reference | user UUID | `"uuid-of-user"` |
-| interaction | object | `{"type": "email", "subject": "Re: Deal"}` |
-
-## Common Patterns
-
-### Create a company and link a person to it
-```bash
-# 1. Create company
-COMPANY=$(curl -s -X POST .../api/v1/objects/companies/records \
-  -H "Authorization: Bearer $OPENCLAW_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"values": {"name": "Acme Inc", "domains": "acme.com"}}')
-COMPANY_ID=$(echo $COMPANY | jq -r '.data.id')
-
-# 2. Create person linked to company
-curl -X POST .../api/v1/objects/people/records \
-  -H "Authorization: Bearer $OPENCLAW_KEY" \
-  -H "Content-Type: application/json" \
-  -d "{\"values\": {\"name\": {\"first_name\": \"John\", \"last_name\": \"Smith\"}, \"company\": \"$COMPANY_ID\"}}"
-```
-
-### Find or create (assert mode)
-```bash
-curl -X POST .../api/v1/objects/companies/records/query \
-  -H "Authorization: Bearer $OPENCLAW_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"mode": "assert", "matchAttribute": "domains", "matchValue": "acme.com", "values": {"name": "Acme Inc"}}'
-```
-
-### Paginate through all records
-```bash
-OFFSET=0
-while true; do
-  RESULT=$(curl -s ".../api/v1/objects/people/records?limit=200&offset=$OFFSET" \
-    -H "Authorization: Bearer $OPENCLAW_KEY")
-  COUNT=$(echo $RESULT | jq '.data.records | length')
-  [ "$COUNT" -eq 0 ] && break
-  # Process records...
-  OFFSET=$((OFFSET + 200))
-done
-```
-
-## Error Codes
-| Code | HTTP | Meaning |
-|------|------|---------|
-| UNAUTHORIZED | 401 | Missing or invalid auth |
-| FORBIDDEN | 403 | Insufficient permissions (admin required) |
-| NOT_FOUND | 404 | Resource not found |
-| BAD_REQUEST | 400 | Invalid input |
-| INTERNAL_ERROR | 500 | Server error |
-
-## Rate Limits
-No rate limits enforced (self-hosted). Be reasonable with bulk operations.
-
-## Notes
-- All IDs are UUIDs
-- Timestamps are ISO 8601 format
-- Pagination defaults: limit=50, offset=0 (max limit varies by endpoint, usually 200)
-- Admin-only endpoints: DELETE objects, workspace updates, member management, API key management
-- The API uses a typed EAV (Entity-Attribute-Value) data model — records store values per-attribute
+Detailed setup: https://openclaw-crm.402box.io/docs

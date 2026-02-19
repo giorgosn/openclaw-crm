@@ -1324,10 +1324,10 @@ export default function DocsPage() {
               <li>
                 <Strong>Concise reference</Strong>:{" "}
                 <a
-                  href="/llms.txt"
+                  href="/llms-api.txt"
                   className="text-primary underline underline-offset-4 hover:text-primary/80"
                 >
-                  /llms.txt
+                  /llms-api.txt
                 </a>{" "}
                 , quick endpoint list, useful for LLM agents
               </li>

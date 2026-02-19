@@ -25,7 +25,7 @@ export function middleware(req: NextRequest) {
   }
 
   // Allow public API spec endpoints and SEO files without auth
-  if (pathname === "/openapi.json" || pathname === "/llms.txt" || pathname === "/llms-full.txt" || pathname === "/robots.txt" || pathname === "/sitemap.xml") {
+  if (pathname === "/openapi.json" || pathname === "/llms.txt" || pathname === "/llms-api.txt" || pathname === "/llms-full.txt" || pathname === "/robots.txt" || pathname === "/sitemap.xml") {
     return NextResponse.next();
   }
 

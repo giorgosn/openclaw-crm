@@ -1,11 +1,12 @@
-# OpenClaw CRM — Complete Product Documentation
+# OpenClaw CRM:Complete Product Documentation
 # Version: 1.0
-# For API endpoint reference only, see: /llms.txt
+# For product overview: /llms.txt
+# For API endpoint reference only, see: /llms-api.txt
 # OpenAPI spec: /openapi.json
 
 ## What is OpenClaw CRM?
 
-OpenClaw CRM is a free, open-source, self-hosted CRM (Customer Relationship Manager). It is a clone of Attio (attio.com) designed for everyday users. It runs on your own server — no vendor lock-in, no per-seat pricing, no data leaving your infrastructure.
+OpenClaw CRM is a free, open-source, self-hosted CRM (Customer Relationship Manager). It is a clone of Attio (attio.com) designed for everyday users. It runs on your own server:no vendor lock-in, no per-seat pricing, no data leaving your infrastructure.
 
 Stack: Next.js 15, TypeScript, PostgreSQL, Drizzle ORM, Better Auth, shadcn/ui, TanStack Table, dnd-kit, TipTap.
 
@@ -14,7 +15,7 @@ Deployment: Docker Compose (PostgreSQL container + Next.js app).
 ## Core Concepts
 
 ### Objects
-Objects are schema types — like tables in a database. Built-in objects: People, Companies, Deals. You can create custom objects with any slug, name, and icon.
+Objects are schema types:like tables in a database. Built-in objects: People, Companies, Deals. You can create custom objects with any slug, name, and icon.
 
 ### Records
 Records are individual entries within an object. A person is a record in the People object. A deal is a record in the Deals object.
@@ -61,7 +62,7 @@ This allows unlimited custom attributes without schema migrations.
 
 ### People & Companies
 - Table view with sortable, resizable columns
-- Inline editing — click any cell to edit
+- Inline editing:click any cell to edit
 - Add custom attributes (columns) via the + header button
 - Record detail page with tabs: Overview, Notes, Tasks, Related
 - Record references allow linking people to companies and vice versa
@@ -82,7 +83,7 @@ This allows unlimited custom attributes without schema migrations.
 
 ### Notes
 - Rich text editor (TipTap) with formatting: bold, italic, headings, lists, links
-- Attached to records — view per-record or globally
+- Attached to records:view per-record or globally
 - Auto-save as you type
 
 ### Lists
@@ -124,11 +125,11 @@ This allows unlimited custom attributes without schema migrations.
 ## UI Navigation
 
 ### Sidebar (authenticated)
-- **Home** — Dashboard with greeting, stats, recent records, quick actions
-- **Chat** — AI assistant
-- **Tasks** — Global task list
-- **Notes** — All notes across records
-- **Notifications** — In-app notifications
+- **Home**:Dashboard with greeting, stats, recent records, quick actions
+- **Chat**:AI assistant
+- **Tasks**:Global task list
+- **Notes**:All notes across records
+- **Notifications**:In-app notifications
 - **Records section**: People, Companies, Deals
 - **Lists section**: User-created lists with + button to create new
 - **Bottom**: Docs, Settings
@@ -145,10 +146,10 @@ This allows unlimited custom attributes without schema migrations.
 - Activity feed
 
 ### Settings Pages
-- /settings — General workspace settings
-- /settings/members — Team member management
-- /settings/api-keys — API key management
-- /settings/ai — OpenRouter API key + model configuration
+- /settings:General workspace settings
+- /settings/members:Team member management
+- /settings/api-keys:API key management
+- /settings/ai:OpenRouter API key + model configuration
 
 ## Authentication
 
@@ -161,33 +162,33 @@ This allows unlimited custom attributes without schema migrations.
 ## Data Model (Database Schema)
 
 ### Core Tables
-- **workspaces** — Workspace with name, slug, settings (jsonb)
-- **workspace_memberships** — User-workspace link with role (owner/admin/member)
-- **objects** — Schema types (People, Companies, Deals, custom)
-- **attributes** — Fields on objects (slug, title, type, config, sort_order)
-- **attribute_options** — Select/status option values with colors
-- **records** — Individual entries in objects
-- **record_values** — Typed EAV values (text_value, number_value, date_value, etc.)
+- **workspaces**:Workspace with name, slug, settings (jsonb)
+- **workspace_memberships**:User-workspace link with role (owner/admin/member)
+- **objects**:Schema types (People, Companies, Deals, custom)
+- **attributes**:Fields on objects (slug, title, type, config, sort_order)
+- **attribute_options**:Select/status option values with colors
+- **records**:Individual entries in objects
+- **record_values**:Typed EAV values (text_value, number_value, date_value, etc.)
 
 ### Feature Tables
-- **tasks** — Tasks with content, deadline, completion status, linked records
-- **notes** — Rich text notes linked to records
-- **lists** — Curated record collections
-- **list_entries** — Records in a list with list-specific values
-- **list_attributes** — Custom columns on lists
-- **notifications** — In-app notification entries
+- **tasks**:Tasks with content, deadline, completion status, linked records
+- **notes**:Rich text notes linked to records
+- **lists**:Curated record collections
+- **list_entries**:Records in a list with list-specific values
+- **list_attributes**:Custom columns on lists
+- **notifications**:In-app notification entries
 
 ### AI Tables
-- **conversations** — Chat conversation threads
-- **messages** — Individual messages with role, content, tool calls
+- **conversations**:Chat conversation threads
+- **messages**:Individual messages with role, content, tool calls
 
 ### Auth Tables (Better Auth)
-- **user**, **session**, **account**, **verification** — Managed by Better Auth
+- **user**, **session**, **account**, **verification**:Managed by Better Auth
 
 ## API Reference
 
 Base URL: http://localhost:3001
-Auth: Bearer token — Authorization: Bearer oc_sk_<token>
+Auth: Bearer token:Authorization: Bearer oc_sk_<token>
 Create API keys at Settings > API Keys.
 
 ### Response Format
@@ -196,30 +197,30 @@ Create API keys at Settings > API Keys.
 - Paginated: { "data": { "records": [...], "pagination": { "limit": 50, "offset": 0, "total": 123 } } }
 
 ### Objects
-GET    /api/v1/objects                              — List all objects
-POST   /api/v1/objects                              — Create object {slug, singularName, pluralName, icon?}
-GET    /api/v1/objects/:slug                         — Get object with attributes
-PATCH  /api/v1/objects/:slug                         — Update object
-DELETE /api/v1/objects/:slug                         — Delete object (admin)
+GET    /api/v1/objects                             :List all objects
+POST   /api/v1/objects                             :Create object {slug, singularName, pluralName, icon?}
+GET    /api/v1/objects/:slug                        :Get object with attributes
+PATCH  /api/v1/objects/:slug                        :Update object
+DELETE /api/v1/objects/:slug                        :Delete object (admin)
 
 ### Attributes
-GET    /api/v1/objects/:slug/attributes              — List attributes
-POST   /api/v1/objects/:slug/attributes              — Create attribute {slug, title, type, config?, isRequired?, isUnique?, isMultiselect?, options?, statuses?}
-PATCH  /api/v1/objects/:slug/attributes              — Update attribute {attributeId, ...fields}
-DELETE /api/v1/objects/:slug/attributes?attributeId=  — Delete attribute
+GET    /api/v1/objects/:slug/attributes             :List attributes
+POST   /api/v1/objects/:slug/attributes             :Create attribute {slug, title, type, config?, isRequired?, isUnique?, isMultiselect?, options?, statuses?}
+PATCH  /api/v1/objects/:slug/attributes             :Update attribute {attributeId, ...fields}
+DELETE /api/v1/objects/:slug/attributes?attributeId= :Delete attribute
 
 ### Attribute Options
-GET    /api/v1/objects/:slug/attributes/options?attributeId=  — List options
-POST   /api/v1/objects/:slug/attributes/options              — Create option {attributeId, title, color?, isActive?}
-PATCH  /api/v1/objects/:slug/attributes/options              — Update option {optionId, attributeType, ...fields}
-DELETE /api/v1/objects/:slug/attributes/options?optionId=&attributeType=  — Delete option
+GET    /api/v1/objects/:slug/attributes/options?attributeId= :List options
+POST   /api/v1/objects/:slug/attributes/options             :Create option {attributeId, title, color?, isActive?}
+PATCH  /api/v1/objects/:slug/attributes/options             :Update option {optionId, attributeType, ...fields}
+DELETE /api/v1/objects/:slug/attributes/options?optionId=&attributeType= :Delete option
 
 ### Records
-GET    /api/v1/objects/:slug/records?limit=50&offset=0       — List records (paginated)
-POST   /api/v1/objects/:slug/records                          — Create record {values: {attr_slug: value}}
-GET    /api/v1/objects/:slug/records/:recordId                — Get single record
-PATCH  /api/v1/objects/:slug/records/:recordId                — Update record {values: {attr_slug: value}}
-DELETE /api/v1/objects/:slug/records/:recordId                — Delete record
+GET    /api/v1/objects/:slug/records?limit=50&offset=0      :List records (paginated)
+POST   /api/v1/objects/:slug/records                         :Create record {values: {attr_slug: value}}
+GET    /api/v1/objects/:slug/records/:recordId               :Get single record
+PATCH  /api/v1/objects/:slug/records/:recordId               :Update record {values: {attr_slug: value}}
+DELETE /api/v1/objects/:slug/records/:recordId               :Delete record
 
 ### Record Query (filter + sort)
 POST   /api/v1/objects/:slug/records/query
@@ -227,80 +228,80 @@ POST   /api/v1/objects/:slug/records/query
   Filter: {operator: "and"|"or", conditions: [{attribute, operator, value}]}
   Operators: equals, not_equals, contains, not_contains, starts_with, ends_with, is_empty, is_not_empty, gt, gte, lt, lte
   Sort: {attribute: "slug", direction: "asc"|"desc"}
-  Assert mode: {mode: "assert", matchAttribute, matchValue, values} — find-or-create
+  Assert mode: {mode: "assert", matchAttribute, matchValue, values}:find-or-create
 
 ### Record Relations & Activity
-GET    /api/v1/objects/:slug/records/:recordId/related   — Related records
-GET    /api/v1/objects/:slug/records/:recordId/activity  — Activity feed
-GET    /api/v1/objects/:slug/records/:recordId/tasks     — Tasks linked to record
-GET    /api/v1/objects/:slug/records/:recordId/notes     — Notes on record
-POST   /api/v1/objects/:slug/records/:recordId/notes     — Create note {title?, content?}
+GET    /api/v1/objects/:slug/records/:recordId/related  :Related records
+GET    /api/v1/objects/:slug/records/:recordId/activity :Activity feed
+GET    /api/v1/objects/:slug/records/:recordId/tasks    :Tasks linked to record
+GET    /api/v1/objects/:slug/records/:recordId/notes    :Notes on record
+POST   /api/v1/objects/:slug/records/:recordId/notes    :Create note {title?, content?}
 
 ### Bulk Import
-POST   /api/v1/objects/:slug/records/import    — Import up to 1000 records {rows: [{attr_slug: value, ...}]}
+POST   /api/v1/objects/:slug/records/import   :Import up to 1000 records {rows: [{attr_slug: value, ...}]}
 
 ### Lists
-GET    /api/v1/lists                                     — List all lists
-POST   /api/v1/lists                                     — Create list {name, objectSlug, isPrivate?}
-GET    /api/v1/lists/:listId                              — Get list
-PATCH  /api/v1/lists/:listId                              — Update list
-DELETE /api/v1/lists/:listId                              — Delete list
+GET    /api/v1/lists                                    :List all lists
+POST   /api/v1/lists                                    :Create list {name, objectSlug, isPrivate?}
+GET    /api/v1/lists/:listId                             :Get list
+PATCH  /api/v1/lists/:listId                             :Update list
+DELETE /api/v1/lists/:listId                             :Delete list
 
 ### List Attributes
-GET    /api/v1/lists/:listId/attributes                   — List list-specific attributes
-POST   /api/v1/lists/:listId/attributes                   — Create list attribute {slug, title, type}
-PATCH  /api/v1/lists/:listId/attributes                   — Update list attribute {id, ...fields}
-DELETE /api/v1/lists/:listId/attributes?id=               — Delete list attribute
+GET    /api/v1/lists/:listId/attributes                  :List list-specific attributes
+POST   /api/v1/lists/:listId/attributes                  :Create list attribute {slug, title, type}
+PATCH  /api/v1/lists/:listId/attributes                  :Update list attribute {id, ...fields}
+DELETE /api/v1/lists/:listId/attributes?id=              :Delete list attribute
 
 ### List Entries
-GET    /api/v1/lists/:listId/entries?limit=50&offset=0    — List entries (paginated)
-POST   /api/v1/lists/:listId/entries                      — Add record to list {recordId, values?}
-PATCH  /api/v1/lists/:listId/entries/:entryId             — Update entry values {values}
-DELETE /api/v1/lists/:listId/entries/:entryId             — Remove entry from list
-GET    /api/v1/lists/:listId/available-records?search=    — Records not in this list
+GET    /api/v1/lists/:listId/entries?limit=50&offset=0   :List entries (paginated)
+POST   /api/v1/lists/:listId/entries                     :Add record to list {recordId, values?}
+PATCH  /api/v1/lists/:listId/entries/:entryId            :Update entry values {values}
+DELETE /api/v1/lists/:listId/entries/:entryId            :Remove entry from list
+GET    /api/v1/lists/:listId/available-records?search=   :Records not in this list
 
 ### Notes
-GET    /api/v1/notes?limit=50&offset=0                    — List all notes (paginated)
-GET    /api/v1/notes/:noteId                              — Get note
-PATCH  /api/v1/notes/:noteId                              — Update note {title?, content?}
-DELETE /api/v1/notes/:noteId                              — Delete note
+GET    /api/v1/notes?limit=50&offset=0                   :List all notes (paginated)
+GET    /api/v1/notes/:noteId                             :Get note
+PATCH  /api/v1/notes/:noteId                             :Update note {title?, content?}
+DELETE /api/v1/notes/:noteId                             :Delete note
 
 ### Tasks
-GET    /api/v1/tasks?showCompleted=false&limit=50&offset=0  — List tasks (paginated)
-POST   /api/v1/tasks                                        — Create task {content, deadline?, recordIds?, assigneeIds?}
-PATCH  /api/v1/tasks/:taskId                                — Update task {content?, isCompleted?, deadline?}
-DELETE /api/v1/tasks/:taskId                                — Delete task
+GET    /api/v1/tasks?showCompleted=false&limit=50&offset=0 :List tasks (paginated)
+POST   /api/v1/tasks                                       :Create task {content, deadline?, recordIds?, assigneeIds?}
+PATCH  /api/v1/tasks/:taskId                               :Update task {content?, isCompleted?, deadline?}
+DELETE /api/v1/tasks/:taskId                               :Delete task
 
 ### Workspace
-GET    /api/v1/workspace                                 — Get workspace
-PATCH  /api/v1/workspace                                 — Update workspace (admin) {name?}
+GET    /api/v1/workspace                                :Get workspace
+PATCH  /api/v1/workspace                                :Update workspace (admin) {name?}
 
 ### Workspace Members
-GET    /api/v1/workspace-members                         — List members
-POST   /api/v1/workspace-members                         — Add member (admin) {email, role?}
-PATCH  /api/v1/workspace-members/:memberId               — Update role (admin) {role}
-DELETE /api/v1/workspace-members/:memberId               — Remove member (admin)
+GET    /api/v1/workspace-members                        :List members
+POST   /api/v1/workspace-members                        :Add member (admin) {email, role?}
+PATCH  /api/v1/workspace-members/:memberId              :Update role (admin) {role}
+DELETE /api/v1/workspace-members/:memberId              :Remove member (admin)
 
 ### Notifications
-GET    /api/v1/notifications?unreadOnly=false&limit=30   — List notifications
-PATCH  /api/v1/notifications/:notificationId             — Mark as read
-POST   /api/v1/notifications/mark-all-read               — Mark all as read
+GET    /api/v1/notifications?unreadOnly=false&limit=30  :List notifications
+PATCH  /api/v1/notifications/:notificationId            :Mark as read
+POST   /api/v1/notifications/mark-all-read              :Mark all as read
 
 ### Search
-GET    /api/v1/search?q=query&limit=20                   — Global search
-GET    /api/v1/records/browse?limit=20                   — Browse recent records
+GET    /api/v1/search?q=query&limit=20                  :Global search
+GET    /api/v1/records/browse?limit=20                  :Browse recent records
 
 ### API Keys (admin only)
-GET    /api/v1/api-keys                                  — List API keys
-POST   /api/v1/api-keys                                  — Create key {name, scopes?, expiresAt?}
-DELETE /api/v1/api-keys/:keyId                           — Revoke key
+GET    /api/v1/api-keys                                 :List API keys
+POST   /api/v1/api-keys                                 :Create key {name, scopes?, expiresAt?}
+DELETE /api/v1/api-keys/:keyId                          :Revoke key
 
 ### AI Chat
-POST   /api/v1/chat/completions                         — Send message (SSE streaming) {conversationId?, message}
-POST   /api/v1/chat/tool-confirm                         — Confirm/deny write tool {conversationId, toolCallId, approved}
-GET    /api/v1/chat/conversations                        — List conversations
-GET    /api/v1/chat/conversations/:id                    — Get conversation with messages
-DELETE /api/v1/chat/conversations/:id                    — Delete conversation
+POST   /api/v1/chat/completions                        :Send message (SSE streaming) {conversationId?, message}
+POST   /api/v1/chat/tool-confirm                        :Confirm/deny write tool {conversationId, toolCallId, approved}
+GET    /api/v1/chat/conversations                       :List conversations
+GET    /api/v1/chat/conversations/:id                   :Get conversation with messages
+DELETE /api/v1/chat/conversations/:id                   :Delete conversation
 
 ## Value Formats by Attribute Type
 
@@ -339,9 +340,9 @@ DELETE /api/v1/chat/conversations/:id                    — Delete conversation
 6. Open http://localhost:3001, register an account, and create a workspace
 
 ### Environment Variables
-- DATABASE_URL — PostgreSQL connection string
-- BETTER_AUTH_SECRET — Auth encryption secret
-- BETTER_AUTH_URL — Base URL of the app (http://localhost:3001)
+- DATABASE_URL:PostgreSQL connection string
+- BETTER_AUTH_SECRET:Auth encryption secret
+- BETTER_AUTH_URL:Base URL of the app (http://localhost:3001)
 
 ## Error Codes
 
