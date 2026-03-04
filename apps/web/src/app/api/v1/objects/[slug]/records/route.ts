@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getAuthContext, unauthorized, notFound, badRequest, success } from "@/lib/api-utils";
 import { getObjectBySlug } from "@/services/objects";
 import { listRecords, createRecord } from "@/services/records";
+import { triggerWebhooks } from "@/services/webhooks";
 
 export async function GET(
   req: NextRequest,
@@ -45,5 +46,12 @@ export async function POST(
   }
 
   const record = await createRecord(obj.id, values, ctx.userId);
+
+  triggerWebhooks(ctx.workspaceId, "record.created", {
+    objectSlug: obj.slug,
+    objectName: obj.singularName,
+    record,
+  });
+
   return success(record, 201);
 }

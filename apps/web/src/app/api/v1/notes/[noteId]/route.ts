@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getAuthContext, unauthorized, notFound, success } from "@/lib/api-utils";
 import { getNote, updateNote, deleteNote, verifyNoteWorkspace } from "@/services/notes";
+import { triggerWebhooks } from "@/services/webhooks";
 
 /** GET /api/v1/notes/[noteId] */
 export async function GET(
@@ -56,6 +57,11 @@ export async function DELETE(
 
   const note = await deleteNote(noteId);
   if (!note) return notFound("Note not found");
+
+  triggerWebhooks(ctx.workspaceId, "note.deleted", {
+    noteId: note.id,
+    recordId: note.recordId,
+  });
 
   return success({ deleted: true });
 }
