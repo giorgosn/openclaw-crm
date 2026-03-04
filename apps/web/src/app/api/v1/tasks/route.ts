@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthContext, unauthorized, badRequest, success } from "@/lib/api-utils";
 import { listTasks, createTask } from "@/services/tasks";
+import { triggerWebhooks } from "@/services/webhooks";
 
 /** GET /api/v1/tasks — All tasks for current user in active workspace */
 export async function GET(req: NextRequest) {
@@ -48,6 +49,8 @@ export async function POST(req: NextRequest) {
       recordIds: body.recordIds as string[] | undefined,
       assigneeIds: body.assigneeIds as string[] | undefined,
     });
+
+    triggerWebhooks(ctx.workspaceId, "task.created", { task });
 
     return success(task, 201);
   } catch (err) {

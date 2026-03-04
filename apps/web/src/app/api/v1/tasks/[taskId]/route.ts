@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthContext, unauthorized, notFound, success } from "@/lib/api-utils";
 import { updateTask, deleteTask } from "@/services/tasks";
+import { triggerWebhooks } from "@/services/webhooks";
 
 /** PATCH /api/v1/tasks/[taskId] */
 export async function PATCH(
@@ -16,6 +17,10 @@ export async function PATCH(
     const body = await req.json();
     const task = await updateTask(taskId, ctx.workspaceId, body);
     if (!task) return notFound("Task not found");
+
+    const event = task.isCompleted && body.isCompleted ? "task.completed" : "task.updated";
+    triggerWebhooks(ctx.workspaceId, event, { task });
+
     return success(task);
   } catch (err) {
     console.error("Failed to update task:", err);
@@ -39,6 +44,9 @@ export async function DELETE(
   try {
     const task = await deleteTask(taskId, ctx.workspaceId);
     if (!task) return notFound("Task not found");
+
+    triggerWebhooks(ctx.workspaceId, "task.deleted", { taskId });
+
     return success({ deleted: true });
   } catch (err) {
     console.error("Failed to delete task:", err);

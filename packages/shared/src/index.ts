@@ -9,3 +9,5 @@ export { ATTRIBUTE_TYPES, ATTRIBUTE_TYPE_COLUMN_MAP } from "./constants/attribut
 export type { AttributeType } from "./constants/attribute-types";
 export { STANDARD_OBJECTS, DEAL_STAGES } from "./constants/standard-objects";
 export type { StandardObject, StandardAttribute } from "./constants/standard-objects";
+export { WEBHOOK_EVENTS } from "./constants/webhook-events";
+export type { WebhookEvent, WebhookPayload } from "./constants/webhook-events";

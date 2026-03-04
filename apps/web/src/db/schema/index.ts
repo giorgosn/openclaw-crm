@@ -8,3 +8,4 @@ export * from "./tasks";
 export * from "./notifications";
 export * from "./api-keys";
 export * from "./chat";
+export * from "./webhooks";

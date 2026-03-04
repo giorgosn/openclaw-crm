@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getAuthContext, unauthorized, success, badRequest } from "@/lib/api-utils";
 import { listNotes, createNote } from "@/services/notes";
+import { triggerWebhooks } from "@/services/webhooks";
 
 /** GET /api/v1/notes — All notes in workspace */
 export async function GET(req: NextRequest) {
@@ -37,6 +38,8 @@ export async function POST(req: NextRequest) {
     content || null,
     ctx.userId
   );
+
+  triggerWebhooks(ctx.workspaceId, "note.created", { note });
 
   return success(note, 201);
 }
