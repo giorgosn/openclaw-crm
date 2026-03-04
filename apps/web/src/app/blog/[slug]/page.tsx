@@ -6,10 +6,10 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { JsonLd } from "@/components/json-ld";
 import { getPostBySlug, getPostSlugs } from "@/lib/content";
+import { baseUrl } from "@/lib/base-url";
 import type { Metadata } from "next";
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_APP_URL || "https://openclaw-crm.402box.io";
+export const dynamicParams = false;
 
 export async function generateStaticParams() {
   const slugs = await getPostSlugs();
@@ -24,9 +24,6 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) return {};
-
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL || "https://openclaw-crm.402box.io";
 
   return {
     title: post.meta.title,

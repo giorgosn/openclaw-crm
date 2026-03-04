@@ -1,9 +1,11 @@
 import type { MetadataRoute } from "next";
-import { getPostSlugs, getComparisonSlugs } from "@/lib/content";
+import { getAllPosts, getAllComparisons } from "@/lib/content";
+import { baseUrl } from "@/lib/base-url";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL || "https://openclaw-crm.402box.io";
+
+  const posts = await getAllPosts();
+  const comparisons = await getAllComparisons();
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
@@ -21,32 +23,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${baseUrl}/blog`,
-      lastModified: new Date(),
+      lastModified: posts[0]?.meta.date ? new Date(posts[0].meta.date) : new Date(),
       changeFrequency: "weekly",
       priority: 0.8,
     },
     {
       url: `${baseUrl}/compare`,
-      lastModified: new Date(),
+      lastModified: comparisons[0]?.meta.date ? new Date(comparisons[0].meta.date) : new Date(),
       changeFrequency: "weekly",
       priority: 0.8,
     },
   ];
 
-  // Blog posts
-  const postSlugs = await getPostSlugs();
-  const blogPages: MetadataRoute.Sitemap = postSlugs.map((slug) => ({
-    url: `${baseUrl}/blog/${slug}`,
-    lastModified: new Date(),
+  // Blog posts - use actual publication dates
+  const blogPages: MetadataRoute.Sitemap = posts.map((post) => ({
+    url: `${baseUrl}/blog/${post.meta.slug}`,
+    lastModified: new Date(post.meta.date),
     changeFrequency: "monthly" as const,
     priority: 0.7,
   }));
 
-  // Comparison pages
-  const compareSlugs = await getComparisonSlugs();
-  const comparePages: MetadataRoute.Sitemap = compareSlugs.map((slug) => ({
-    url: `${baseUrl}/compare/${slug}`,
-    lastModified: new Date(),
+  // Comparison pages - use actual publication dates
+  const comparePages: MetadataRoute.Sitemap = comparisons.map((page) => ({
+    url: `${baseUrl}/compare/${page.meta.slug}`,
+    lastModified: new Date(page.meta.date),
     changeFrequency: "monthly" as const,
     priority: 0.7,
   }));

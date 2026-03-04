@@ -4,10 +4,8 @@ import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { getAllComparisons } from "@/lib/content";
+import { baseUrl } from "@/lib/base-url";
 import type { Metadata } from "next";
-
-const baseUrl =
-  process.env.NEXT_PUBLIC_APP_URL || "https://openclaw-crm.402box.io";
 
 export const metadata: Metadata = {
   title: "Compare",

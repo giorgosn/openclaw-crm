@@ -1,4 +1,6 @@
-// Analytics utility: fires events to both Plausible and GA4
+// Analytics utility: fires events to Plausible, GA4, and Amplitude
+
+import * as amplitude from "@amplitude/analytics-browser";
 
 declare global {
   interface Window {
@@ -14,13 +16,18 @@ export function trackEvent(
   name: string,
   props?: Record<string, string | number>
 ) {
+  if (typeof window === "undefined") return;
+
   // Plausible (always available, no consent needed)
-  if (typeof window !== "undefined" && window.plausible) {
+  if (window.plausible) {
     window.plausible(name, props ? { props } : undefined);
   }
 
   // GA4 (only if consent was given and gtag loaded)
-  if (typeof window !== "undefined" && window.gtag) {
+  if (window.gtag) {
     window.gtag("event", name, props);
   }
+
+  // Amplitude (always available, no consent needed)
+  amplitude.track(name, props);
 }

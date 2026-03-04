@@ -5,10 +5,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { JsonLd } from "@/components/json-ld";
 import { getAllPosts } from "@/lib/content";
+import { baseUrl } from "@/lib/base-url";
 import type { Metadata } from "next";
-
-const baseUrl =
-  process.env.NEXT_PUBLIC_APP_URL || "https://openclaw-crm.402box.io";
 
 export const metadata: Metadata = {
   title: "Blog",

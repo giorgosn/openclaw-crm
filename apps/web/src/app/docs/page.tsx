@@ -69,8 +69,7 @@ const tocGroups = [
   },
 ];
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_APP_URL || "https://openclaw-crm.402box.io";
+import { baseUrl } from "@/lib/base-url";
 
 export const metadata = {
   title: "Docs",

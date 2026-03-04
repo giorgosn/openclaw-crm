@@ -16,10 +16,8 @@ import { TerminalDemo } from "@/components/landing/terminal-demo";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { JsonLd } from "@/components/json-ld";
 import { TrackedLink, TrackedAnchor } from "@/components/analytics/tracked-link";
+import { baseUrl } from "@/lib/base-url";
 import type { Metadata } from "next";
-
-const baseUrl =
-  process.env.NEXT_PUBLIC_APP_URL || "https://openclaw-crm.402box.io";
 
 export const metadata: Metadata = {
   alternates: {

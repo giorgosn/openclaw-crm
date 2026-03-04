@@ -3,7 +3,9 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PlausibleScript } from "@/components/analytics/plausible-script";
 import { GA4Script } from "@/components/analytics/ga4-script";
+import { AmplitudeScript } from "@/components/analytics/amplitude-script";
 import { CookieConsent } from "@/components/analytics/cookie-consent";
+import { baseUrl } from "@/lib/base-url";
 import "./globals.css";
 
 const inter = Inter({
@@ -18,9 +20,7 @@ export const metadata: Metadata = {
   },
   description:
     "The CRM your AI agent already knows how to use. Open-source, self-hosted, with native OpenClaw Bot integration.",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "https://openclaw-crm.402box.io"
-  ),
+  metadataBase: new URL(baseUrl),
   openGraph: {
     title: "OpenClaw CRM",
     description:
@@ -35,6 +35,13 @@ export const metadata: Metadata = {
     description:
       "The CRM your AI agent already knows how to use. Open-source, self-hosted, with native OpenClaw Bot integration.",
   },
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? {
+        verification: {
+          google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+        },
+      }
+    : {}),
 };
 
 export default function RootLayout({
@@ -47,6 +54,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <PlausibleScript />
         <GA4Script />
+        <AmplitudeScript />
         <ThemeProvider>{children}</ThemeProvider>
         <CookieConsent />
       </body>
